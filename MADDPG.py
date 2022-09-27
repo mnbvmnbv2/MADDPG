@@ -76,8 +76,11 @@ class Coop_MADDPG:
         # (64, 4, 81) batch, agents, state
 
         # (64, 4, 81) => (64, 324)
-        flat_next_state = tf.reshape(next_state_batch, (next_state_batch.shape[0], -1))
-        print('64, 324',flat_next_state.shape)
+        flat_next_state_last = tf.reshape(next_state_batch, (next_state_batch.shape[0], -1))
+        print('64, 324',flat_next_state_last.shape)
+        # (64, 4, 81) => (256, 81)
+        flat_next_state_first = tf.reshape(next_state_batch, (-1, next_state_batch.shape[2]))
+        print('64, 324',flat_next_state_first.shape)
         # (64, 4, 81) => (256, 81)
         flat_state_first = tf.reshape(state_batch, (-1, state_batch.shape[2]))
         print('256, 81',flat_state_first.shape)
@@ -91,13 +94,13 @@ class Coop_MADDPG:
         # calculate per agent loss
         with tf.GradientTape() as tape1:
             # get target actions in shape (256, 2), but we want (64, 8)
-            target_actions = self.target_actor(flat_state_first, training=True)
+            target_actions = self.target_actor(flat_next_state_first, training=True)
             # reshape to get batch size in first axis
             reshaped_target_actions = tf.reshape(target_actions, (self.batch_size, -1))
             # check that the tensor is in the right format
             print('target_actions, should be (64,8) and is', reshaped_target_actions.shape)
             # get the target_critic_values and add an dimension (64, 1) to (64, 1, 1)
-            target_critic_value = tf.expand_dims(self.target_critic([flat_next_state, reshaped_target_actions], training=True), -1)
+            target_critic_value = tf.expand_dims(self.target_critic([flat_next_state_last, reshaped_target_actions], training=True), -1)
             # output of (64, 4, 1) batch, agent, value
             y = reward_batch + done_batch * self.gamma * target_critic_value
             # reduce to (64, 1)
