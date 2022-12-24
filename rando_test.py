@@ -1,21 +1,22 @@
-
 import time
-import tensorflow as tf
+
+# import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 def test(env, actor_weights, continuous, total_episodes=10, render=False, timing=False):
     rewards = []
-    
+
     for _ in range(total_episodes):
         ep_reward = 0
-        
+
         before = time.time()
-        
+
         prev_state = env.reset()
         agent = Coop_MADDPG()
         agent.actor_model.load_weights(actor_weights)
-        
+
         while True:
             if render:
                 env.render()
@@ -31,7 +32,7 @@ def test(env, actor_weights, continuous, total_episodes=10, render=False, timing
                 state, reward, done, _ = env.step(action)
             else:
                 state, reward, done, _ = env.step(np.argmax(action))
-            
+
             ep_reward += reward
 
             prev_state = state
@@ -40,29 +41,30 @@ def test(env, actor_weights, continuous, total_episodes=10, render=False, timing
                 break
 
         if timing:
-            print(str(time.time() - before) + 's')
+            print(str(time.time() - before) + "s")
             rewards.append(ep_reward)
-            
+
     plt.plot(rewards)
     plt.xlabel("Episode")
     plt.ylabel("True reward")
     plt.show()
 
+
 def rando(env, total_episodes=10, render=False, timing=False, testing=False):
     rewards = []
     for _ in range(total_episodes):
         ep_reward = np.zeros(4)
-        
+
         before = time.time()
-        
+
         _ = env.reset()
-        
+
         while True:
             if render:
                 env.render()
-            action = env.action_space.sample() # np.random.randint(0,2,(4)).tolist()
+            action = env.action_space.sample()  # np.random.randint(0,2,(4)).tolist()
             state, reward, done, _ = env.step(action)
-            ep_reward = np.add(ep_reward, np.array(reward))
+            ep_reward += reward
 
             # For testing:
             if testing:
@@ -73,10 +75,10 @@ def rando(env, total_episodes=10, render=False, timing=False, testing=False):
                 break
 
         if timing:
-            print(str(time.time() - before) + 's')
-        
+            print(str(time.time() - before) + "s")
+
         rewards.append(np.sum(ep_reward))
-            
+
     # plt.plot(rewards)
     # plt.xlabel("Episode")
     # plt.ylabel("True reward")
